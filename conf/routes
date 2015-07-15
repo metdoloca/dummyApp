@@ -1,0 +1,13 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET         /                         controllers.io.FileResolver.index()
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /assets/*file             controllers.Assets.versioned(path="/public", file: Asset)
+GET         /getFile/:fileName        controllers.io.FileResolver.getFile(fileName:String)
+GET         /execute/:fileName        controllers.io.FileResolver.execute(fileName:String)
+POST        /save                     controllers.io.FileResolver.save()
+POST        /getLog                   controllers.io.FileResolver.getLog()

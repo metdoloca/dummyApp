@@ -105,6 +105,7 @@ class FileResolver @Inject() (cache: CacheApi) extends Controller{
     val system = ActorSystem("receiver")
     val actor = system.actorOf(Props(new LocalActor(cache)), "receiver")
     actor ! RunCommand(fileName, lines, unique)
+    //actor ! RunCommand(fileName, lines, unique)
     Ok("")
   }
 

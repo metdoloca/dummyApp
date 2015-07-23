@@ -11,3 +11,4 @@ GET         /getFile/:fileName        controllers.io.FileResolver.getFile(fileNa
 GET         /execute/:fileName        controllers.io.FileResolver.execute(fileName:String)
 POST        /save                     controllers.io.FileResolver.save()
 POST        /getLog                   controllers.io.FileResolver.getLog()
+GET         /clearLog                 controllers.io.FileResolver.clearLog()

@@ -57,6 +57,8 @@ class LocalActor(cache: CacheApi) extends Actor{
 
 class FileResolver @Inject() (cache: CacheApi) extends Controller{
 
+  val actor = ActorSystem("receiver").actorOf(Props(new LocalActor(cache)), "receiver")
+
   def setSessionCache(session:Session):String ={
     var unique:String = session.get("sessionKey").getOrElse("")
     if( unique.isEmpty ) {
@@ -102,8 +104,6 @@ class FileResolver @Inject() (cache: CacheApi) extends Controller{
 
     val source = scala.io.Source.fromFile("public/code/scriptable/" + fileName)
     val lines = try source.mkString finally source.close()
-    val system = ActorSystem("receiver")
-    val actor = system.actorOf(Props(new LocalActor(cache)), "receiver")
     actor ! RunCommand(fileName, lines, unique)
     //actor ! RunCommand(fileName, lines, unique)
     Ok("")
@@ -126,7 +126,13 @@ class FileResolver @Inject() (cache: CacheApi) extends Controller{
       val json = Json.toJson(logLines)
       Ok(json)
     }
+  }
 
+  def clearLog() = Action { request =>
+    //Lines.seq+=LogLine(Random.alphanumeric.take(Random.nextInt%5+5).mkString,Lines.seq.length+1)
+    val logLines = getSessionLogLines(request.session)
+    logLines.clear()
+    Ok("")
   }
   implicit val f = Json.format[LogLine]
 

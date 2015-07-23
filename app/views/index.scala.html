@@ -5,6 +5,10 @@
     <script src="@routes.Assets.versioned("lib/mode/clike/clike.js")" type="text/javascript"></script>
     <link rel="stylesheet" href="@routes.Assets.versioned("lib/lib/codemirror.css")">
     <link rel="stylesheet" href="@routes.Assets.versioned("lib/theme/ambiance.css")">
+
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
     <script src="//code.jquery.com/jquery-1.10.2.js"></script>
     <script>
     var editor;
@@ -18,11 +22,9 @@
           mode:"text/x-scala"
         });
 
-        editor.setSize( "100%","100%");
+        editor.setSize( "100%","900px");
         $("#load").click(function(){
-            console.log('load1');
             var fileName = document.getElementById('fileName' ).value;
-            console.log('load2');
             $.ajax({
                 type: "GET",
                 dataType: "text",
@@ -31,7 +33,6 @@
                     editor.setValue(data)
                 }
             });
-            console.log('load3');
         });
 
         $("#execute" ).click(function(){
@@ -60,6 +61,8 @@
             });
         });
 
+
+
         // console
         var consoleTextArea = document.getElementById('console');
         logConsole = CodeMirror.fromTextArea(consoleTextArea,{
@@ -67,8 +70,20 @@
             theme:"ambiance",
             mode:"text/x-scala"
         });
+
+        $("#clearLog" ).click(function(){
+            $.ajax({
+                type: "GET",
+                dataType: "text",
+                url: "/clearLog",
+                success: function(data){
+                    logConsole.clear();
+                }
+            });
+        });
+
         var lineLength=0;
-        logConsole.setSize( "100%","100%");
+        logConsole.setSize( "100%","900px");
         var interval = setInterval( function(){
             var jsonVal = JSON.stringify({fileName:"a",codeChunk:"b"});
             $.ajax({
@@ -84,11 +99,11 @@
                         for( var i = 0; i < data.length;i++){
                             var lineNum = data[i].lineNumber;
                             var line = data[i ].line;
-                            tempText+= lineNum.toString() + ":" + line + "\n";
+                            tempText+= /*lineNum.toString() + ":" +*/ line + "\n";
                         }
                         logConsole.setValue(tempText);
                         var start_cursor = logConsole.getCursor();
-                        logConsole.setCursor( {line:data.length, ch : start_cursor.ch });
+                        logConsole.setCursor( {line:logConsole.lineCount(), ch : start_cursor.ch });
                     }
                 }
             });
@@ -109,13 +124,17 @@
 
 
 <body>
+    <br>
     <div class="form-inline">
         <input type="text" id="fileName" name="fileName" class="form-control" placeholder="AccountNick or CharNick" value="Main.scala"/>
         <input type="button" id="load" name="load" class="form-control" value="load">
         <input type="button" id="execute" name="execute" class="form-control" value="execute">
         <input type="button" id="save" name="save" class="form-control" value="save">
-        <input type="button" id="stop" value="stop">
+        <input type="button" id="stop" value="stop" class="form-control" >
+        <input type="button" id="clearLog" value="clearLog" class="form-control" >
     </div>
+
+    <br>
 
     <div style="width:100%">
         <div style="float:left;width:50%"><textarea id="code"></textarea></div>

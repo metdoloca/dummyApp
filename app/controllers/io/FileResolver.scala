@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorSelection, ActorSystem, Props}
 import play.api.libs.json._
 import play.api.mvc.{Action, BodyParsers, Controller, Session}
 import play.cache._
-import scriptable.{Command, LogLine, RunCommand}
+import scriptable.{KillCommand, Command, LogLine, RunCommand}
 
 import scala.collection.mutable
 import scala.reflect.io.File
@@ -14,7 +14,6 @@ import scala.reflect.io.File
 
 class LocalActor(cache: CacheApi) extends Actor{
   var remoteActor:ActorSelection = null
-  var sessionKey:String = ""
   @throws[Exception](classOf[Exception])
   override def preStart(): Unit = {
     /*
@@ -41,16 +40,15 @@ class LocalActor(cache: CacheApi) extends Actor{
     }
     case runCommand:RunCommand =>{
       println("OnStartCommand")
-      sessionKey = runCommand.sessionKey
-      remoteActor ! Command(runCommand.fileName,runCommand.code)
+      val sessionKey = runCommand.sessionKey
+      remoteActor ! Command("execute",runCommand.fileName,runCommand.code, runCommand.hostIp, sessionKey)
     }
-//    case cmd:Command =>{
-//      println("OnCommand")
-//      remoteActor ! cmd
-//    }
+    case kill:KillCommand =>{
+      remoteActor ! Command("kill","","",kill.hostIp,kill.sessionKey)
+    }
     case line:LogLine =>{
-      val logLines:mutable.MutableList[LogLine] = cache.get(sessionKey)
-      logLines+=LogLine(line.line,logLines.length+1)
+      val logLines:mutable.MutableList[LogLine] = cache.get(line.sessionKey)
+      logLines+=LogLine(line.line,logLines.length+1, line.sessionKey)
     }
   }
 }
@@ -93,20 +91,21 @@ class FileResolver @Inject() (cache: CacheApi) extends Controller{
 
   def execute(fileName:String) = Action{ request =>
 
-    val unique:String = request.session.get("sessionKey").getOrElse("")
+    var unique:String = request.session.get("sessionKey").getOrElse("")
     if( unique.isEmpty ){
       RequestTimeout("!!!")
     }
     val logLines = getSessionLogLines(request.session)
     if( logLines == null ){
-      setSessionCache(request.session)
+      unique = setSessionCache(request.session)
     }
+    println(s"execute:${unique}")
 
     val source = scala.io.Source.fromFile("public/code/scriptable/" + fileName)
     val lines = try source.mkString finally source.close()
-    actor ! RunCommand(fileName, lines, unique)
+    actor ! RunCommand(fileName, lines, unique, request.remoteAddress)
     //actor ! RunCommand(fileName, lines, unique)
-    Ok("")
+    Ok("").withSession("sessionKey"->unique)
   }
 
   def save() = Action(BodyParsers.parse.json) { request =>
@@ -132,6 +131,14 @@ class FileResolver @Inject() (cache: CacheApi) extends Controller{
     //Lines.seq+=LogLine(Random.alphanumeric.take(Random.nextInt%5+5).mkString,Lines.seq.length+1)
     val logLines = getSessionLogLines(request.session)
     logLines.clear()
+    Ok("")
+  }
+
+  def kill() = Action { request =>
+    val unique:String = request.session.get("sessionKey").getOrElse("")
+    println(s"kill, who = ${unique}")
+    //Lines.seq+=LogLine(Random.alphanumeric.take(Random.nextInt%5+5).mkString,Lines.seq.length+1)
+    actor ! KillCommand(request.remoteAddress, unique)
     Ok("")
   }
   implicit val f = Json.format[LogLine]

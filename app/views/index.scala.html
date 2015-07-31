@@ -42,7 +42,7 @@
                 dataType: "text",
                 url: "/execute/"+theFileName,
                 success: function(data){
-                    alert("execute success");
+                    //alert("execute success");
                 }
             });
         });
@@ -56,7 +56,7 @@
                 contentType : 'application/json',
                 data : jsonVal,
                 success: function(data){
-                    alert("save success");
+                    //alert("save success");
                 }
             });
         });
@@ -68,7 +68,8 @@
         logConsole = CodeMirror.fromTextArea(consoleTextArea,{
             lineNumbers:true,
             theme:"ambiance",
-            mode:"text/x-scala"
+            mode:"text/x-scala",
+            readOnly:true
         });
 
         $("#clearLog" ).click(function(){
@@ -76,6 +77,17 @@
                 type: "GET",
                 dataType: "text",
                 url: "/clearLog",
+                success: function(data){
+                    logConsole.clear();
+                }
+            });
+        });
+
+        $("#kill" ).click(function(){
+            $.ajax({
+                type: "GET",
+                dataType: "text",
+                url: "/kill",
                 success: function(data){
                     logConsole.clear();
                 }
@@ -130,8 +142,9 @@
         <input type="button" id="load" name="load" class="form-control" value="load">
         <input type="button" id="execute" name="execute" class="form-control" value="execute">
         <input type="button" id="save" name="save" class="form-control" value="save">
-        <input type="button" id="stop" value="stop" class="form-control" >
         <input type="button" id="clearLog" value="clearLog" class="form-control" >
+        <input type="button" id="kill" value="kill" class="form-control" >
+        <!--<input type="button" id="stop" value="stopLogConsole" class="form-control" >-->
     </div>
 
     <br>

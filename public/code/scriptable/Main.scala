@@ -53,7 +53,7 @@ class Main extends Script{
       return false
     }
 
-	override def onRead(message:Message) = {
+	override def onRead(channel:Channel, message:Message) = {
 		if( message.protocolId == 102 ) {
 			//println(s"onRead = ${message.readString}")
 			recvCount+=1
@@ -62,7 +62,7 @@ class Main extends Script{
 		}
 	}
   	
-  	override def onDisconnect = {
+  	override def onDisconnect(channel:Channel) = {
       writeConsole("onDisconnect")
     }
   

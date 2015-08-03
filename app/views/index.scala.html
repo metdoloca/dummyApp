@@ -13,6 +13,7 @@
     <script>
     var editor;
     var logConsole;
+    var logSystemConsole;
     $( document ).ready(function() {
         // code
         var textArea = document.getElementById('code');
@@ -31,8 +32,29 @@
                 url: "/getFile/"+fileName,
                 success: function(data){
                     editor.setValue(data)
+                    logSystemConsole.setValue(logSystemConsole.getValue() + "system:load script\n");
+                    var start_cursor = logSystemConsole.getCursor();
+                    logSystemConsole.setCursor( {line:logSystemConsole.lineCount(), ch : start_cursor.ch });
                 }
             });
+        });
+
+        // console
+        var consoleTextArea = document.getElementById('console');
+        logConsole = CodeMirror.fromTextArea(consoleTextArea,{
+            lineNumbers:true,
+            theme:"ambiance",
+            mode:"text/x-scala",
+            readOnly:true
+        });
+
+        // systemConsole
+        var consoleSystemLogTextArea = document.getElementById('systemConsole');
+        logSystemConsole = CodeMirror.fromTextArea(consoleSystemLogTextArea,{
+            lineNumbers:true,
+            theme:"ambiance",
+            mode:"text/x-scala",
+            readOnly:true
         });
 
         $("#execute" ).click(function(){
@@ -42,7 +64,10 @@
                 dataType: "text",
                 url: "/execute/"+theFileName,
                 success: function(data){
-                    //alert("execute success");
+                    logSystemConsole.setValue(logSystemConsole.getValue() + "system:execute script\n");
+                    var start_cursor = logSystemConsole.getCursor();
+                    logSystemConsole.setCursor( {line:logSystemConsole.lineCount(), ch : start_cursor.ch });
+
                 }
             });
         });
@@ -56,29 +81,29 @@
                 contentType : 'application/json',
                 data : jsonVal,
                 success: function(data){
-                    //alert("save success");
+                    logSystemConsole.setValue(logSystemConsole.getValue() + "system:save script success\n");
+                    var start_cursor = logSystemConsole.getCursor();
+                    logSystemConsole.setCursor( {line:logSystemConsole.lineCount(), ch : start_cursor.ch });
                 }
             });
         });
 
 
 
-        // console
-        var consoleTextArea = document.getElementById('console');
-        logConsole = CodeMirror.fromTextArea(consoleTextArea,{
-            lineNumbers:true,
-            theme:"ambiance",
-            mode:"text/x-scala",
-            readOnly:true
-        });
+
+        logSystemConsole.setSize( "100%","100px");
 
         $("#clearLog" ).click(function(){
             $.ajax({
                 type: "GET",
                 dataType: "text",
                 url: "/clearLog",
+                lineWrapping: true,
                 success: function(data){
                     logConsole.clear();
+                    logSystemConsole.setValue(logSystemConsole.getValue() + "system:clear console\n");
+                    var start_cursor = logSystemConsole.getCursor();
+                    logSystemConsole.setCursor( {line:logSystemConsole.lineCount(), ch : start_cursor.ch });
                 }
             });
         });
@@ -89,7 +114,9 @@
                 dataType: "text",
                 url: "/kill",
                 success: function(data){
-                    logConsole.clear();
+                    logSystemConsole.setValue(logSystemConsole.getValue() + "system:kill task\n");
+                    var start_cursor = logSystemConsole.getCursor();
+                    logSystemConsole.setCursor( {line:logSystemConsole.lineCount(), ch : start_cursor.ch });
                 }
             });
         });
@@ -136,26 +163,28 @@
 
 
 <body>
-    <br>
-    <div class="form-inline">
-        <input type="text" id="fileName" name="fileName" class="form-control" placeholder="AccountNick or CharNick" value="Main.scala"/>
-        <input type="button" id="load" name="load" class="form-control" value="load">
-        <input type="button" id="execute" name="execute" class="form-control" value="execute">
-        <input type="button" id="save" name="save" class="form-control" value="save">
-        <input type="button" id="clearLog" value="clearLog" class="form-control" >
-        <input type="button" id="kill" value="kill" class="form-control" >
-        <!--<input type="button" id="stop" value="stopLogConsole" class="form-control" >-->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="form-inline">
+                <input type="text" id="fileName" name="fileName" class="form-control" placeholder="AccountNick or CharNick" value="Main.scala"/>
+                <input type="button" id="load" name="load" class="form-control" value="load">
+                <input type="button" id="execute" name="execute" class="form-control" value="execute">
+                <input type="button" id="save" name="save" class="form-control" value="save">
+                <input type="button" id="clearLog" value="clearLog" class="form-control" >
+                <input type="button" id="kill" value="kill" class="form-control" >
+                <!--<input type="button" id="stop" value="stopLogConsole" class="form-control" >-->
+            </div>
+        </div>
+        <div class="panel-body">
+            <div style="width:100%">
+                <div style="float:left;width:50%">code<textarea id="code"></textarea></div>
+                <div style="float:left;width:50%">console<textarea id="console"></textarea></div>
+            </div>
+            <div style="width:100%">
+                systemConsole
+                <textarea id="systemConsole"></textarea>
+            </div>
+        </div>
     </div>
-
-    <br>
-
-    <div style="width:100%">
-        <div style="float:left;width:50%"><textarea id="code"></textarea></div>
-        <div style="float:left;width:50%"><textarea id="console"></textarea></div>
-    </div>
-
-
-
-
 </body>
 @* @main("Welcome to Play") {} *@
